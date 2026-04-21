@@ -17,6 +17,14 @@ import {
   type Hypothesis,
   type HypothesisStatus,
 } from "@/lib/storage/types";
+import { cn } from "@/lib/utils";
+
+const COLUMN_HEADING_CLASS: Record<HypothesisStatus, string> = {
+  Backlog: "text-zinc-400",
+  "Em andamento": "text-amber-400",
+  "Concluído — Validada": "text-emerald-400",
+  "Concluído — Invalidada": "text-rose-400",
+};
 
 type HypothesisKanbanProps = {
   items: Hypothesis[];
@@ -40,7 +48,7 @@ function HypothesisKanbanCard({
   const statusSelectId = useId();
 
   return (
-    <li className="rounded-md border border-zinc-800 bg-zinc-950/50 p-3 shadow-sm">
+    <li className="rounded-md border border-zinc-800 bg-zinc-900/60 p-3 shadow-sm transition-colors duration-150 hover:border-zinc-700">
       <div className="space-y-2">
         <h3 className="text-sm font-medium leading-snug text-zinc-100">
           {item.nome}
@@ -73,7 +81,7 @@ function HypothesisKanbanCard({
             type="button"
             variant="ghost"
             size="icon"
-            className="size-8 shrink-0"
+            className="size-8 shrink-0 transition-shadow duration-150 hover:shadow-glow-rose"
             aria-label={`Excluir hipótese ${item.nome}`}
             onClick={onDelete}
           >
@@ -91,8 +99,8 @@ export function HypothesisKanban({
   onDelete,
 }: HypothesisKanbanProps) {
   return (
-    <div className="-mx-1 overflow-x-auto px-1 pb-1">
-      <div className="flex min-h-[12rem] min-w-min gap-4">
+    <div className="-mx-1 overflow-x-auto px-1 pb-1 lg:mx-0 lg:overflow-x-visible lg:px-0">
+      <div className="flex min-h-[12rem] min-w-min gap-4 lg:min-w-0 lg:gap-6">
         {HYPOTHESIS_STATUS_ORDER.map((status, columnIndex) => {
           const columnItems = items
             .filter((h) => h.status === status)
@@ -101,13 +109,16 @@ export function HypothesisKanban({
           return (
             <section
               key={status}
-              className="flex w-[min(100%,280px)] shrink-0 flex-col gap-3"
+              className="flex min-w-[260px] shrink-0 flex-col gap-3 lg:min-w-0 lg:flex-1"
               aria-labelledby={headingId}
             >
               <div className="space-y-0.5">
                 <h3
                   id={headingId}
-                  className="text-xs font-semibold text-zinc-300"
+                  className={cn(
+                    "text-xs font-semibold",
+                    COLUMN_HEADING_CLASS[status],
+                  )}
                 >
                   {status}
                 </h3>
