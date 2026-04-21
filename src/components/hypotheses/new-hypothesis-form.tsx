@@ -87,6 +87,7 @@ export function NewHypothesisForm({ onCreated }: NewHypothesisFormProps) {
 
   return (
     <form
+      id="new-hypothesis-form"
       className="space-y-4"
       onSubmit={(e) => void handleSubmit(e)}
       noValidate
@@ -163,10 +164,10 @@ export function NewHypothesisForm({ onCreated }: NewHypothesisFormProps) {
 
       <Button
         type="submit"
+        variant="emphasis"
         disabled={isSaving}
-        className="bg-lime-400 text-zinc-950 shadow-[0_0_18px_-2px_rgba(163,230,53,0.65)] hover:bg-lime-300 hover:shadow-[0_0_24px_-2px_rgba(163,230,53,0.9)] focus-visible:ring-lime-400/60 disabled:opacity-50"
       >
-        <Plus className="size-4" />
+        <Plus className="size-4" data-icon="inline-start" />
         {isSaving ? "Salvando…" : "Adicionar hipótese"}
       </Button>
     </form>

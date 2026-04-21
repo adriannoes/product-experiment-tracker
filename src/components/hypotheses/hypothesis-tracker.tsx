@@ -1,7 +1,9 @@
 "use client";
 
+import { Plus } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
+import { Button } from "@/components/ui/button";
 import { getSupabase } from "@/lib/supabase/client";
 import {
   listHypotheses,
@@ -23,6 +25,7 @@ export function HypothesisTracker() {
   // Three distinct states: loading prevents flash of empty-state CTA.
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [isFormOpen, setIsFormOpen] = useState(false);
 
   const loadAll = useCallback(async () => {
     setIsLoading(true);
@@ -64,6 +67,15 @@ export function HypothesisTracker() {
     };
   }, [loadAll]);
 
+  useEffect(() => {
+    if (!isFormOpen) return;
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape" && !e.defaultPrevented) setIsFormOpen(false);
+    }
+    document.addEventListener("keydown", handleKeyDown);
+    return () => document.removeEventListener("keydown", handleKeyDown);
+  }, [isFormOpen]);
+
   // Optimistic: prepend the newly created item without waiting for a reload.
   const handleCreated = useCallback((created: Hypothesis) => {
     setItems((prev) => [created, ...prev]);
@@ -103,19 +115,26 @@ export function HypothesisTracker() {
   );
 
   return (
-    <section className="space-y-6" aria-labelledby="hypotheses-heading">
-      <ImportLocalBanner onImported={() => void loadAll()} />
-      <NewHypothesisForm onCreated={handleCreated} />
-      <div className="space-y-3">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h2
-            id="hypotheses-heading"
-            className="text-sm font-medium text-zinc-300"
+    <section className="space-y-4" aria-labelledby="tracker-heading">
+      <div className="px-4 md:px-8">
+        <ImportLocalBanner onImported={() => void loadAll()} />
+      </div>
+
+      <header className="flex flex-col gap-3 px-4 sm:flex-row sm:items-center sm:justify-between md:px-8">
+        <div>
+          <h1
+            id="tracker-heading"
+            className="text-xl font-semibold tracking-tight text-zinc-100"
           >
-            Suas hipóteses
-          </h2>
+            Product Experiment Tracker
+          </h1>
+          <p className="text-xs text-zinc-500">
+            Cadastre e acompanhe hipóteses de experimento.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
           <div
-            className="flex rounded-lg border border-zinc-800 p-0.5"
+            className="flex rounded-lg border border-zinc-700 p-0.5"
             role="tablist"
             aria-label="Modo de visualização"
           >
@@ -125,7 +144,7 @@ export function HypothesisTracker() {
               aria-selected={viewMode === "list"}
               className={
                 viewMode === "list"
-                  ? "rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100"
+                  ? "rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 ring-2 ring-zinc-500/45"
                   : "rounded-md px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200"
               }
               onClick={() => setViewMode("list")}
@@ -138,7 +157,7 @@ export function HypothesisTracker() {
               aria-selected={viewMode === "kanban"}
               className={
                 viewMode === "kanban"
-                  ? "rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100"
+                  ? "rounded-md bg-zinc-800 px-3 py-1.5 text-sm font-medium text-zinc-100 ring-2 ring-zinc-500/45"
                   : "rounded-md px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-200"
               }
               onClick={() => setViewMode("kanban")}
@@ -146,8 +165,32 @@ export function HypothesisTracker() {
               Kanban
             </button>
           </div>
+          <Button
+            type="button"
+            variant="emphasis"
+            aria-expanded={isFormOpen}
+            aria-controls={isFormOpen ? "new-hypothesis-form" : undefined}
+            onClick={() => setIsFormOpen((prev) => !prev)}
+          >
+            <Plus className="size-4" data-icon="inline-start" />
+            Nova hipótese
+          </Button>
         </div>
+      </header>
 
+      {isFormOpen ? (
+        <div className="animate-in fade-in-0 slide-in-from-top-2 duration-200 motion-reduce:animate-none px-4 md:px-8">
+          <NewHypothesisForm onCreated={handleCreated} />
+        </div>
+      ) : null}
+
+      <h2 className="sr-only">Suas hipóteses</h2>
+
+      <div
+        className={
+          viewMode === "list" ? "mx-auto max-w-2xl px-4" : "px-4 md:px-8"
+        }
+      >
         {isLoading ? (
           <p className="text-sm text-zinc-500">Carregando hipóteses…</p>
         ) : hasError ? (
@@ -165,7 +208,8 @@ export function HypothesisTracker() {
           </div>
         ) : items.length === 0 ? (
           <p className="text-sm text-zinc-500">
-            Cadastre sua primeira hipótese no formulário acima.
+            Nenhuma hipótese cadastrada. Use o botão &quot;Nova hipótese&quot;
+            acima para começar.
           </p>
         ) : viewMode === "list" ? (
           <ul className="list-none space-y-3 p-0">
