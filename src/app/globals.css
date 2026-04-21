@@ -82,6 +82,9 @@
   --sidebar-ring: oklch(0.708 0 0);
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  /* Subtle rose glow for destructive control hovers (Tailwind: shadow-glow-rose) */
+  --glow-rose: 0 0 12px -3px rgba(244, 63, 94, 0.4);
+  --glow-rose-hover: 0 0 18px -3px rgba(244, 63, 94, 0.6);
 }
 
 html {
@@ -96,11 +99,12 @@ html {
 }
 
 .dark {
+  /* RV-05: zinc-950 background, zinc-900 surfaces, zinc-100 primary text */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.21 0 0);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.21 0 0);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
@@ -127,6 +131,14 @@ html {
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@utility shadow-glow-rose {
+  box-shadow: var(--glow-rose);
+}
+
+@utility shadow-glow-rose-hover {
+  box-shadow: var(--glow-rose-hover);
 }
 
 @layer base {
