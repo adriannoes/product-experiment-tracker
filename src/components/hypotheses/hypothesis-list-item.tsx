@@ -14,7 +14,7 @@ type HypothesisListItemProps = {
 
 export function HypothesisListItem({ item, onDelete }: HypothesisListItemProps) {
   return (
-    <li className="flex items-start justify-between gap-4 rounded-md border border-zinc-800 p-4">
+    <li className="flex items-start justify-between gap-4 rounded-md border border-zinc-800 bg-zinc-900/60 p-4 transition-colors duration-150 hover:border-zinc-700">
       <div className="min-w-0 flex-1 space-y-1">
         <h3 className="text-base font-medium leading-snug text-zinc-100">
           {item.nome}
@@ -26,7 +26,7 @@ export function HypothesisListItem({ item, onDelete }: HypothesisListItemProps) 
         type="button"
         variant="ghost"
         size="icon"
-        className="shrink-0"
+        className="shrink-0 transition-shadow duration-150 hover:shadow-glow-rose"
         aria-label={`Excluir hipótese ${item.nome}`}
         onClick={onDelete}
       >
