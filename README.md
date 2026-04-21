@@ -1,28 +1,37 @@
 # Product Experiment Tracker
 
-Ferramenta enxuta para PMs cadastrarem hipóteses de testes A/B em segundos. Persistência em banco de dados real (Supabase), com dados compartilhados entre dispositivos e Realtime ativo.
+Ferramenta enxuta para PMs cadastrarem hipóteses de testes A/B em segundos. **Supabase** é a fonte de verdade: dados compartilhados entre dispositivos e **Realtime** ativo.
 
-> **MVP v1.1** — camada de storage migrada de `localStorage` para Supabase. Edição de hipótese, registro de aprendizado e validação Zod ficam para a v1.2.
+> **MVP (armazenamento)** — a camada de storage foi migrada de `localStorage` para o Supabase.  
+> **v1.1 (interface, pós-deploy)** — refactor visual: toolbar unificada, formulário de criação colapsável, Kanban em largura total em telas grandes, tokens dark padronizados, botões primários com variante `emphasis` (zinc) no design system, hovers e brilho rose nos botões de excluir. **Não há novas regras de negócio** na v1.1. Edição completa, campo `aprendizado` e validação Zod seguem no roadmap (veja o PRD).
 
 ## Stack
 
 - [Next.js 16](https://nextjs.org/) (App Router) + React 19
 - TypeScript em modo `strict`
-- Tailwind CSS v4
-- [shadcn/ui](https://ui.shadcn.com/) — apenas `button`, `input`, `label`, `select`
+- Tailwind CSS v4 (utilitários customizados com `@utility` quando necessário, ex.: sombra rose em hovers destrutivos)
+- [shadcn/ui](https://ui.shadcn.com/) — `button`, `input`, `label`, `select` e variantes do `Button` (ex.: `emphasis` para ações principais)
 - [lucide-react](https://lucide.dev/) para ícones
-- [@supabase/supabase-js](https://supabase.com/docs/reference/javascript) — client browser-only (sem `@supabase/ssr`)
-- [Vitest](https://vitest.dev/) + [happy-dom](https://github.com/capricorn86/happy-dom) para testes de mappers
+- [@supabase/supabase-js](https://supabase.com/docs/reference/javascript) — client apenas no browser (sem `@supabase/ssr`)
+- [Vitest](https://vitest.dev/) + [happy-dom](https://github.com/capricorn86/happy-dom) para testes
+
+## O que mudou na v1.1 (resumo)
+
+- **Layout da home** — `max-w-2xl` deixa de prender a página inteira; título, subtítulo (sem copy de “dados só no navegador”) e controles ficam numa **barra superior**; modo **Lista** continua com conteúdo contido; modo **Kanban** usa a largura útil, com colunas flexíveis a partir de `lg` e scroll horizontal em telas menores.
+- **Formulário de criação** — inicia **fechado**; o botão **“Nova hipótese”** abre e fecha; **Esc** fecha; foco e fluxo pós-salvamento alinhados ao PRD.
+- **Kanban** — títulos de coluna com a mesma paleta de status da lista; cards com fundo e hover de borda; lista de itens com visual alinhado aos cards.
+- **Estilo** — tokens `.dark` revisados; botões alinhados ao componente `Button` (variante `emphasis` em zinc, não CTA verde).
+- Comportamento de **criar / listar / alterar status / excluir** e integração com **Supabase** permanecem os mesmos do MVP.
 
 ## Pré-requisitos
 
-- [Node.js LTS](https://nodejs.org/) (validado em **v22**)
-- npm 10+ (acompanha o Node)
-- Projeto Supabase ativo com a tabela `experiments` criada (ver `supabase/migrations/`)
+- [Node.js](https://nodejs.org/) em **v22** (veja `engines` no `package.json`)
+- **npm** 10+ (vem com o Node)
+- Projeto **Supabase** com a tabela `experiments` (veja `supabase/migrations/`)
 
 ## Variáveis de ambiente
 
-Copie `.env.example` para `.env.local` e preencha com as credenciais do projeto Supabase:
+Crie o arquivo a partir do exemplo e preencha com a URL pública e a **anon key** do seu projeto:
 
 ```bash
 cp .env.example .env.local
@@ -33,87 +42,100 @@ NEXT_PUBLIC_SUPABASE_URL=https://<seu-projeto>.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<sua-anon-key>
 ```
 
-Obtenha os valores em: **Dashboard Supabase → Settings → API**.
+Onde obter: **Supabase Dashboard → Project Settings → API**. Em produção (ex.: Vercel), defina as mesmas variáveis em **Environment Variables** do projeto.
 
-Em produção (Vercel), defina as mesmas variáveis em **Project Settings → Environment Variables**.
+> **Segurança (estilo demo):** a anon key fica no bundle do browser. As políticas RLS do repositório não substituem um produto multiusuário com Auth. Plano: Supabase Auth + `user_id` + RLS por usuário (detalhes no PRD).
 
-> **Aviso de segurança (modo demo):** as políticas RLS atuais permitem SELECT/INSERT/UPDATE para o role `anon` mas **negam DELETE**. A anon key fica embutida no bundle JS do browser — qualquer pessoa pode lê-la e chamar a API do Supabase diretamente. Não use essas políticas em produção pública. Próximo passo: Supabase Auth + coluna `user_id` + RLS por usuário.
+## Como rodar localmente
 
-## Como rodar
+Segue um fluxo mínimo do zero até abrir o app no navegador.
 
-```bash
-npm install        # instala dependências
-npm run dev        # sobe o app em http://localhost:3000
-npm run build      # build de produção
-npm test           # roda a suíte Vitest uma vez
-npm run test:watch # Vitest em modo watch
-npm run lint       # ESLint flat config
-```
+1. **Clonar o repositório** (se ainda não tiver a pasta do projeto):
+   - `git clone <url-do-repo>`  
+   - Explicação: copia o código para a sua máquina.
+
+2. **Entrar na pasta do projeto:**
+   - `cd product-experiment-tracker`  
+   - Explicação: os próximos comandos precisam rodar na raiz do app.
+
+3. **Instalar dependências:**
+   - `npm install`  
+   - Explicação: baixa as dependências listadas no `package-lock.json`.
+
+4. **Configurar ambiente (obrigatório para falar com o Supabase):**
+   - Copie `.env.example` para `.env.local` (como na seção acima) e preencha `NEXT_PUBLIC_SUPABASE_URL` e `NEXT_PUBLIC_SUPABASE_ANON_KEY`.  
+   - Sem isso, o app pode subir, mas a listagem e criação de hipóteses vão falhar.
+
+5. **Subir o servidor de desenvolvimento:**
+   - `npm run dev`  
+   - Explicação: inicia o Next.js com hot reload, em geral em `http://localhost:3000`.
+
+6. **Abrir no navegador** a URL exibida no terminal (padrão `http://localhost:3000/`) e validar criação de hipóteses, troca Lista/Kanban, etc.
+
+**Comandos úteis (ainda em local):**
+
+- `npm run build` — gera o build de produção (TypeScript + páginas estáticas); use para checar se tudo compila.
+- `npm start` — após `npm run build`, sobe o servidor de produção localmente (porta 3000 por padrão).
+- `npm test` — roda a suíte **Vitest** uma vez.
+- `npm run test:watch` — Vitest em modo watch.
+- `npm run lint` — **ESLint** no projeto.
 
 ## Banco de dados (Supabase)
 
-A migração está em `supabase/migrations/20260420000000_create_experiments.sql`. Para aplicar em um projeto novo:
+A migração está em `supabase/migrations/20260420000000_create_experiments.sql`. Para um projeto novo:
 
-1. Abra o **SQL Editor** no Dashboard do Supabase.
-2. Cole e execute o conteúdo do arquivo de migração.
-3. Ative **Realtime** na tabela `experiments` em **Database → Replication → Tables**.
+1. **SQL Editor** no Dashboard do Supabase → cole e execute o arquivo de migração.
+2. Ative **Realtime** na tabela `experiments` (em **Database**: Replication/Publications, conforme a UI do seu projeto).
 
-## Estrutura
+## Estrutura do repositório
 
 ```
 src/
   app/                    # rotas e layout (App Router)
   components/
     ui/                   # primitivos shadcn
-    hypotheses/           # componentes de feature
+    hypotheses/            # feature (tracker, lista, kanban, form, banner)
   lib/
     utils.ts              # helper `cn`
-    storage/              # CRUD async via Supabase (hypotheses.ts + types.ts)
-    supabase/             # client singleton, mappers snake↔camel, import-local
+    storage/              # CRUD assíncrono (Supabase) + types
+    supabase/              # client singleton, mappers, import de dados legado
 supabase/
-  migrations/             # SQL de schema versionado
+  migrations/              # SQL versionado
 docs/
-  prd/                    # PRD aprovado
-  tasks/                  # tasks geradas a partir do PRD
-vitest.config.ts
-vitest.setup.ts
+  prd/                     # PRD
+  tasks/                    # listas de tarefas (MVP, v1.1, etc.)
 ```
 
-## Decisões principais (v1.1)
+## Decisões principais
 
-- **Supabase como fonte de verdade.** Tabela `experiments`, projeto `product-experiment`.
-- **`id` gerado pelo cliente** (`crypto.randomUUID()`), não pelo DB — consistência com a migração do `localStorage`.
-- **`atualizado_em` gerenciado exclusivamente por trigger** — app nunca escreve esse campo.
-- **Sem `select *`** — colunas explícitas em todas as queries para evitar quebras silenciosas em migrações futuras.
-- **Realtime ativo** — mudanças na tabela propagam para todos os browsers conectados sem refresh.
-- **Sem Auth nesta fase** — DELETE negado ao role `anon` como proteção mínima; roadmap: Auth + `user_id` + RLS por usuário.
-- **Importação one-shot** — banner aparece se houver dados em `pet:hypotheses:v1` no `localStorage`; upsert idempotente por `id`.
-- **Tema dark único.** Estética "Clean Architect" (zinc/preto, alto contraste).
+- **Supabase** como fonte de verdade; tabela `experiments`.
+- **`id` gerado no cliente** (`crypto.randomUUID()`), alinhado à migração a partir do `localStorage`.
+- **`atualizado_em` só via trigger** no banco — o app não grava esse campo.
+- **Sem `select *`** — colunas explícitas nas consultas.
+- **Realtime** — alterações na tabela refletem em outras abas sem refresh forçado.
+- **Tema dark único** — paleta zinc e contraste alto; import one-shot de `localStorage` quando o banner aparecer.
 
 ## Documentação de referência
 
 - [PRD — Product Experiment Tracker](docs/prd/prd-product-experiment-tracker.md)
-- [Tasks — execução do MVP enxuto](docs/tasks/tasks-prd-product-experiment-tracker.md)
+- [Tasks — MVP enxuto](docs/tasks/tasks-prd-product-experiment-tracker.md)
+- [Tasks — refactor visual v1.1](docs/tasks/tasks-v1.1-visual-refactor.md)
 
-## Validação manual do MVP
+## Validação manual (referência de produto)
 
-### Fluxo a cronometrar
+### Tempo até a primeira hipótese visível (da carga de `/` até o item na lista)
 
-Do momento em que a página `/` termina de carregar até o novo item aparecer na lista após enviar o formulário (nome, métrica de sucesso e status preenchidos).
-
-**Critério de aceite:** as três medições abaixo devem ser **inferiores a 30 segundos** cada.
+Critério de aceite (PRD): três tentativas **&lt; 30 s** cada. Ajuste a tabela com as suas medições reais.
 
 | Tentativa | Tempo (s) | Observações |
 |-----------|-----------|-------------|
-| 1 | 8.2 | Fluxo completo em dev local (`npm run dev`). |
-| 2 | 6.5 | Repetição após limpar o formulário. |
-| 3 | 7.1 | Cadastro encadeado com foco retornando ao nome. |
+| 1 | 8.2 | Exemplo: dev local |
+| 2 | 6.5 | Exemplo: após limpar o formulário |
+| 3 | 7.1 | Exemplo: cadastros em sequência |
 
-Substitua os tempos pelos valores medidos no seu ambiente ao auditar o MVP.
+### Checklist rápido
 
-### Checklist (acessibilidade, layout e console)
-
-- **Teclado:** Tab / Shift+Tab percorrem formulário, lista e botões na ordem visual; Enter envia o formulário; foco visível (`focus-visible` global em `globals.css`).
-- **Viewport ~360×640:** layout em coluna única (`max-w-2xl`, campos e lista sem overflow horizontal).
-- **Console:** fluxo criar → listar → excluir sem erros não tratados (storage encapsulado em `src/lib/storage/hypotheses.ts`).
-- **Contraste:** texto principal e bordas em tons zinc sobre fundo escuro; status com cores semânticas discretas (`status-text.tsx`).
+- **Teclado:** Tab na ordem visual; **Enter** no formulário; **Esc** com o painel de criação aberto; foco visível global (`globals.css`).
+- **Viewport ~360×640:** toolbar quebra em linha(s); Kanban com scroll horizontal abaixo de `lg` se necessário.
+- **Console:** sem erros não tratados em criar / listar / excluir.
+- **Contraste:** textos e bordas em zinc; cores de status discretas (`status-text`, títulos do Kanban).
