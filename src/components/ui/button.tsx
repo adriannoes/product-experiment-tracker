@@ -19,6 +19,9 @@ const buttonVariants = cva(
         destructive:
           "bg-destructive/10 text-destructive hover:bg-destructive/20 focus-visible:border-destructive/40 focus-visible:ring-destructive/20 dark:bg-destructive/20 dark:hover:bg-destructive/30 dark:focus-visible:ring-destructive/40",
         link: "text-primary underline-offset-4 hover:underline",
+        /* Primary CTA (zinc) — high-contrast on dark UIs, pairs with the rest of the zinc token scale */
+        emphasis:
+          "bg-zinc-100 text-zinc-950 [a]:hover:bg-zinc-200 hover:bg-zinc-200 focus-visible:ring-2 focus-visible:ring-zinc-400/40 aria-expanded:ring-2 aria-expanded:ring-zinc-400/55",
       },
       size: {
         default:
