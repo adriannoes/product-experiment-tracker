@@ -1,7 +1,7 @@
 # PRD — Product Experiment Tracker (MVP)
 
-> Versão: 1.2 (MVP enxuto + incremento Kanban documentado em 2026-04-20)
-> Data: 2026-04-20
+> Versão: 1.3 (v1.1 — refactor visual + Kanban tela cheia, pós-deploy)
+> Data: 2026-04-21
 > Autor: Adrianno (PM)
 > Status do documento: Aprovado para implementação (escopo recortado — ver seção 0)
 
@@ -22,12 +22,16 @@ Após revisão de prioridade com foco em entregar o mais rápido possível um MV
 - RF-04 — Excluir hipótese com confirmação, usando `window.confirm()` nativo (sem `AlertDialog` Shadcn nesta versão).
 - RF-05 — Persistência local versionada (`pet:hypotheses:v1`) com fallback gracioso em dados corrompidos.
 
-**Adiado para a v1.1 (após validar o MVP enxuto com uso real):**
+**v1.1 — Refactor visual pós-deploy (2026-04-21):**
+
+- RV-01 a RV-06 — Kanban tela cheia, toolbar unificada, formulário colapsável, estilo neon sóbrio, tokens dark mode e cabeçalhos coloridos. Detalhes completos na subseção "Incremento v1.1" abaixo.
+
+**Adiado para a v1.2+ (após estabilizar a v1.1):**
 
 - HU-04 / RF-03 — Editar hipótese existente.
 - HU-07 e todo o campo `aprendizado` (modelo, RF-06 — limpeza em regressão de status — e indicador visual na lista).
 - RF-07 — Validação com Zod e botão "Salvar" desabilitado durante a operação. Substituídos por validação trivial (HTML `required` + `trim().length > 0`) no MVP enxuto.
-- Formulário em `Dialog` (modal) — substituído por formulário **inline** no topo de `/`.
+- Formulário em `Dialog` (modal) — substituído por formulário colapsável na v1.1.
 - Componente `Badge` estilizado para status — substituído por texto simples com cor sutil.
 - Confirmação de exclusão via `AlertDialog` Shadcn — substituída por `window.confirm()`.
 
@@ -43,7 +47,76 @@ Após revisão de prioridade com foco em entregar o mais rápido possível um MV
 - **HU-03 (parcial):** o `status` pode ser alterado por **Select** em cada card do Kanban; a persistência usa `updateHypothesisStatus` em [`src/lib/storage/hypotheses.ts`](../../src/lib/storage/hypotheses.ts) (atualiza `status` e `atualizadoEm`). **HU-04 / RF-03 completos** (edição de `nome` e `metricaSucesso`, formulário de edição) permanecem adiados para a v1.1.
 - UI: [`src/components/hypotheses/hypothesis-tracker.tsx`](../../src/components/hypotheses/hypothesis-tracker.tsx) (alternância de modo), [`src/components/hypotheses/hypothesis-kanban.tsx`](../../src/components/hypotheses/hypothesis-kanban.tsx). Arrastar-e-soltar entre colunas **não** faz parte deste incremento.
 
-**Como ler o resto deste PRD:** as seções 1–9 abaixo descrevem a **visão completa** (north star). Sempre que uma seção se referir a `aprendizado`, edição, RF-06, modal/`Dialog`, `Badge` ou validação Zod, considere que aquele item está **adiado para a v1.1**, conforme listado acima.
+**Como ler o resto deste PRD:** as seções 1–9 abaixo descrevem a **visão completa** (north star). Sempre que uma seção se referir a `aprendizado`, edição, RF-06, modal/`Dialog`, `Badge` ou validação Zod, considere que aquele item está **adiado para versão futura**, conforme listado acima.
+
+### Incremento v1.1 — Refactor visual + Kanban tela cheia (2026-04-21, pós-deploy)
+
+> **Contexto:** este incremento ocorre **após o primeiro deploy em produção** (Vercel + Supabase). A v1.0 validou o fluxo principal e a métrica primária (cadastro <30s). Com a ferramenta já publicada e funcional, o foco agora é **elevar a qualidade visual** e otimizar o uso do espaço em tela, sem alterar funcionalidades existentes nem adicionar features novas.
+
+**Motivação:**
+
+1. O Kanban, principal modo de visualização do pipeline de experimentos, está restrito a um container `max-w-2xl` (672px), forçando scroll horizontal mesmo em telas largas — um desperdício de espaço que prejudica a visão panorâmica das colunas.
+2. Os controles de ação (formulário de criação, toggle de visualização) estão distribuídos verticalmente, empurrando o conteúdo principal para baixo e exigindo scroll desnecessário.
+3. A estética do MVP é funcional mas não coesa: apenas o botão "Adicionar hipótese" usa o estilo neon (glow lime); os demais controles usam estilos padrão Shadcn sem identidade visual própria.
+
+**Escopo do incremento v1.1:**
+
+- **RV-01 — Kanban em tela cheia:** ao ativar o modo Kanban, o layout deve expandir para a largura total da viewport (removendo a restrição `max-w-2xl`), de forma que as 4 colunas de status ocupem o espaço disponível proporcionalmente. Em telas estreitas (<1024px), manter scroll horizontal com largura mínima por coluna (~260px) para garantir legibilidade dos cards e selects de status. O modo Lista permanece com largura contida (`max-w-2xl`) para legibilidade de texto.
+
+- **RV-02 — Toolbar unificada no topo:** reorganizar os controles existentes em uma **barra horizontal fixa no topo** da seção de hipóteses, composta por:
+  - **Esquerda:** título "Product Experiment Tracker" + subtítulo conciso.
+  - **Direita:** toggle Lista/Kanban + botão para abrir/colapsar o formulário de criação (substituir o formulário sempre-visível por um formulário expansível/colapsável acionado por botão).
+  - Em telas estreitas (<640px), a toolbar pode quebrar em duas linhas, mantendo os controles acessíveis.
+
+- **RV-03 — Formulário colapsável:** o formulário de criação (hoje inline e sempre visível) deve poder ser **expandido/colapsado** via botão na toolbar. Quando aberto, exibe os 3 campos e o botão de submit abaixo da toolbar; quando fechado, libera espaço para o Kanban/Lista. O formulário inicia **fechado** por padrão (o usuário já tem hipóteses cadastradas após o deploy).
+
+- **RV-04 — Estilo neon sóbrio padronizado:** aplicar consistência visual nos controles interativos usando glow sutil inspirado no botão existente ("Adicionar hipótese"), com as seguintes diretrizes:
+  - **Botões primários (ações construtivas):** glow lime (`shadow-[0_0_18px_-2px_rgba(163,230,53,0.65)]`) — já aplicado no botão "Adicionar hipótese"; estender ao toggle ativo de visualização.
+  - **Botões destrutivos (excluir):** glow sutil rose/vermelho (`shadow-[0_0_12px_-3px_rgba(244,63,94,0.4)]`) no hover, mantendo `variant="ghost"` no estado padrão para não poluir visualmente.
+  - **Controles secundários (selects, toggles inativos):** bordas `zinc-700` com transição de borda para `zinc-500` no hover; sem glow — sobriedade deliberada.
+  - **Cards do Kanban:** borda sutil `zinc-800` padrão, com transição para `zinc-700` no hover; fundo `zinc-900/60` para leve diferenciação do background.
+  - **Regra geral:** glow apenas em botões de ação direta (criar, excluir, toggle ativo). Inputs, labels e texto estático **nunca** recebem glow. Efeito controlado via `box-shadow` com valores baixos de spread para manter sobriedade.
+
+- **RV-05 — Reforço de tokens dark mode:** revisar e padronizar tokens de cor em `globals.css` para garantir consistência em toda a UI:
+  - Background principal: `zinc-950` (`#09090b`).
+  - Superfícies elevadas (cards, popovers): `zinc-900` com opacidade.
+  - Bordas: `zinc-800` padrão, `zinc-700` em hover/focus.
+  - Texto primário: `zinc-100`; secundário: `zinc-400`; terciário: `zinc-500`.
+  - Focus ring: manter `outline-2px solid #a1a1aa` (zinc-400) para acessibilidade WCAG AA.
+
+- **RV-06 — Cabeçalhos de coluna Kanban com cor de status:** aplicar a mesma paleta de cor do `StatusText` nos títulos das colunas do Kanban (`zinc-400` para Backlog, `amber-400` para Em andamento, `emerald-400` para Validada, `rose-400` para Invalidada), reforçando a associação visual status ↔ coluna.
+
+**Arquivos impactados (estimativa):**
+
+| Arquivo | Tipo de mudança |
+|---------|----------------|
+| `src/app/page.tsx` | Layout condicional (full-width vs. contido) |
+| `src/app/globals.css` | Tokens neon customizados, utilitários de glow |
+| `src/components/hypotheses/hypothesis-tracker.tsx` | Toolbar unificada, formulário colapsável, prop de layout |
+| `src/components/hypotheses/hypothesis-kanban.tsx` | Colunas flexíveis (fill), cabeçalhos coloridos, hover cards |
+| `src/components/hypotheses/new-hypothesis-form.tsx` | Aceitar controle de visibilidade externo (colapsável) |
+| `src/components/hypotheses/hypothesis-list-item.tsx` | Hover neon em botão excluir |
+| `src/components/hypotheses/status-text.tsx` | Reutilizado para cores dos cabeçalhos Kanban |
+
+**O que NÃO muda neste incremento:**
+
+- Nenhuma funcionalidade nova (criar, listar, excluir, atualizar status — todos permanecem iguais).
+- Nenhum componente Shadcn novo (sem `Dialog`, `Badge`, `AlertDialog`, `Textarea`).
+- Nenhuma alteração no módulo de storage ou na camada Supabase.
+- Nenhuma alteração no modelo de dados.
+- A visão Lista mantém layout contido (`max-w-2xl`) e aparência atual (ajustes de glow pontuais).
+
+**Critérios de aceitação do incremento v1.1:**
+
+1. No modo Kanban, as 4 colunas ocupam a largura total da viewport em telas ≥1024px; em telas <1024px, mantém scroll horizontal sem quebra de layout.
+2. A toolbar está organizada horizontalmente no topo, com título à esquerda e controles à direita.
+3. O formulário de criação é colapsável e inicia fechado; ao abrir, exibe os 3 campos; ao submeter com sucesso, permanece aberto para encadear cadastros.
+4. Todos os botões de ação seguem a paleta neon definida em RV-04 (lime para construtivo, rose para destrutivo, sem glow em secundários).
+5. Cards do Kanban apresentam hover sutil com transição de borda.
+6. Cabeçalhos de coluna do Kanban refletem a cor do status correspondente.
+7. Console limpo (zero erros) durante o fluxo principal em ambos os modos (Lista e Kanban).
+8. Responsividade validada de 360px a 1920px; acessibilidade por teclado mantida (Tab, Enter, Esc para fechar formulário).
+9. `npm run build` passa sem erros de TypeScript ou lint.
 
 ---
 
@@ -234,7 +307,7 @@ Esses itens podem ser revisitados em iterações futuras com base no feedback de
 ## 8. Decisões de produto (questões resolvidas)
 
 1. ✅ **Limite do `localStorage`:** não será tratado no MVP. O limite típico (~5MB) é suficiente para milhares de hipóteses no caso de uso esperado.
-2. ✅ **Migração futura para Supabase:** será um refactor pontual do arquivo `src/lib/storage/hypotheses.ts` quando necessário (provavelmente tornando as funções async). A UI permanecerá intocada por consumir apenas as funções públicas documentadas na seção 4.3.
+2. ✅ **Migração para Supabase (concluída):** as funções em `src/lib/storage/hypotheses.ts` foram convertidas para `async` e agora operam sobre a tabela `experiments` no Supabase. A UI permaneceu intacta (consome as mesmas funções públicas). `localStorage` é mantido apenas como source de importação legado (`import-local-banner.tsx`).
 3. ✅ **Nomenclatura na UI:** adotado **"Hipótese"** como termo principal.
 4. ✅ **Botão "Limpar tudo":** fora do escopo do MVP.
 
@@ -246,8 +319,11 @@ Conforme o fluxo definido em `.cursor/commands/`:
 
 1. Decompor este PRD em tarefas executáveis usando `gerar-tasks.md`. ✅ Concluído — ver [`docs/tasks/tasks-prd-product-experiment-tracker.md`](../tasks/tasks-prd-product-experiment-tracker.md) (escopo da v1.0 enxuta conforme seção 0).
 2. Implementar seguindo o protocolo de checklist em `desenvolvimento.md`.
-3. Após validação do MVP enxuto com uso real, reabrir os itens listados em "Adiado para a v1.1" na seção 0 e gerar um PRD/tasks de incremento.
+3. ✅ MVP v1.0 enxuto validado e **deployed** (Vercel + Supabase). Persistência migrada de `localStorage` para Supabase com Realtime; `localStorage` mantido apenas como source de importação legado.
+4. **v1.1 (em andamento):** implementar o incremento visual (RV-01 a RV-06) documentado na seção 0 — refactor pós-deploy focado em layout, Kanban tela cheia e estética neon sóbria.
+5. Após estabilizar a v1.1, reabrir os itens listados em "Adiado para a v1.2+" na seção 0 (edição completa, aprendizado, Zod, componentes Shadcn adicionais).
 
 ## Documentos relacionados
 
-- Plano de tarefas em execução: [`docs/tasks/tasks-prd-product-experiment-tracker.md`](../tasks/tasks-prd-product-experiment-tracker.md) — reflete o **corte moderado** (v1.0 enxuta).
+- Plano de tarefas v1.0: [`docs/tasks/tasks-prd-product-experiment-tracker.md`](../tasks/tasks-prd-product-experiment-tracker.md) — reflete o **corte moderado** (v1.0 enxuta). ✅ Concluído.
+- Plano de tarefas v1.1: [`docs/tasks/tasks-v1.1-visual-refactor.md`](../tasks/tasks-v1.1-visual-refactor.md) — refactor visual pós-deploy (RV-01 a RV-06).
